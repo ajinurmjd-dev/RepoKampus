@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Repositori Kampus</title>
+  <link rel="stylesheet" href="../CSS/style.css">
+  <link rel="stylesheet" href="../CSS/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../JS/utils.js"></script>
+</head>
+<body>
+
+  <!-- Navbar Admin -->
+  <header class="navbar">
+    <div class="logo">⚙️ Admin Panel - RepoKampus</div>
+    <div class="nav-actions">
+      <button id="themeToggle" class="btn-outline">🌙 Mode Gelap</button>
+      <a href="index.html" class="btn-outline">Lihat Web Utama</a>
+      <button id="logoutBtn" class="btn-danger">Keluar</button>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <!-- Tab Navigasi Admin -->
+    <div class="admin-tabs">
+      <button id="tabMaterials" class="admin-tab-btn active">Kelola Materi Kuliah</button>
+      <button id="tabUsers" class="admin-tab-btn">Kelola Pengguna</button>
+    </div>
+
+    <!-- Alert Notifikasi -->
+    <div id="adminAlert" class="alert-box"></div>
+
+    <!-- SECTION 1: KELOLA MATERI -->
+    <section id="sectionMaterials" class="admin-section">
+      <div class="section-header">
+        <h2>Daftar Materi Perkuliahan</h2>
+        <button id="btnOpenUploadModal" class="btn-primary">+ Unggah Materi Baru</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Judul Materi</th>
+              <th>Mata Kuliah</th>
+              <th>Tahun Ajaran</th>
+              <th>Dilihat</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="materialsTableBody">
+            <tr><td colspan="5" class="text-center">Memuat data materi...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 2: KELOLA PENGGUNA -->
+    <section id="sectionUsers" class="admin-section hidden">
+      <div class="section-header">
+        <h2>Daftar Pengguna Kampus</h2>
+        <span class="badge-info">Akun tidak aktif diprioritaskan di atas</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>NPM</th>
+              <th>Nama Pengguna</th>
+              <th>Email</th>
+              <th>Terakhir Login</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="6" class="text-center">Memuat data pengguna...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+<!-- TABEL PENGGUNA (TAMBAH KOLOM ROLE) -->
+<section id="sectionUsers" class="admin-section hidden">
+  <div class="section-header">
+    <h2>Daftar Pengguna Kampus</h2>
+    <span class="badge-info">Akun tidak aktif diprioritaskan di atas</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Role</th>
+          <th>NPM</th>
+          <th>Nama</th>
+          <th>Email</th>
+          <th>Aksi Role</th>
+          <th>Aksi Akun</th>
+        </tr>
+      </thead>
+      <tbody id="usersTableBody">
+        <tr><td colspan="7" class="text-center">Memuat data pengguna...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- MODAL UNGGAH REPOSITORI / MATERI BARU -->
+<div id="uploadModal" class="modal-overlay hidden">
+  <div class="modal-box modern-modal">
+    <div class="modal-header">
+      <div>
+        <h3>Unggah Materi Kuliah</h3>
+        <p class="text-muted" style="font-size: 0.85rem;">Isi semester, pilih mata kuliah, lalu lampirkan modul PDF.</p>
+      </div>
+      <button id="closeUploadModal" class="btn-close">&times;</button>
+    </div>
+
+    <form id="uploadMaterialForm">
+      <!-- 1. Pilihan Semester & Mata Kuliah -->
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="matSemester">Pilih Semester</label>
+          <select id="matSemester" required>
+            <option value="">-- Pilih Semester --</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+          </select>
+        </div>
+
+        <div class="form-group flex-2">
+          <label for="matCourseId">Mata Kuliah</label>
+          <select id="matCourseId" required disabled>
+            <option value="">Pilih semester terlebih dahulu...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 2. Judul Materi & Tahun Ajaran -->
+      <div class="form-row">
+        <div class="form-group flex-2">
+          <label for="matTitle">Judul Materi</label>
+          <input type="text" id="matTitle" placeholder="Contoh: Modul Pertemuan 1 - Konsep Dasar" required>
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="matAcademicYear">Tahun Ajaran</label>
+          <input type="text" id="matAcademicYear" value="2025/2026" required>
+        </div>
+      </div>
+
+      <!-- 3. Deskripsi -->
+      <div class="form-group">
+        <label for="matDesc">Deskripsi Materi</label>
+        <textarea id="matDesc" rows="3" placeholder="Tuliskan ringkasan topik atau catatan untuk mahasiswa..."></textarea>
+      </div>
+
+      <!-- 4. Add File PDF -->
+      <div class="form-group">
+        <label>Unggah Berkas File (PDF)</label>
+        <div class="file-drop-area" id="dropZone">
+          <span class="file-icon">📄</span>
+          <span class="file-msg" id="fileMsg">Pilih file PDF atau seret ke sini</span>
+          <input type="file" id="matFile" class="file-input" accept="application/pdf" required>
+        </div>
+        <small class="text-muted">Format: PDF | Maks. 20MB</small>
+      </div>
+
+      <button type="submit" id="btnSubmitUpload" class="btn-primary w-full">Simpan & Publikasikan Materi</button>
+    </form>
+  </div>
+</div>
+
+  <script src="../JS/admin.js"></script>
+</body>
+</html>

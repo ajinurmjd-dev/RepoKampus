@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repositori Materi Kuliah</title>
+  <link rel="stylesheet" href="../CSS/style.css">
+  <!-- Supabase SDK via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Utils Module -->
+  <script src="../JS/utils.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="logo">📚 RepoKampus</div>
+   <div class="nav-actions">
+  <button id="themeToggle" class="btn-outline">🌙 Mode Gelap</button>
+
+  <!-- Tombol Tunggal Switching Flip (Bookmark & Riwayat) -->
+  <div id="activitySwitcher" class="switcher-wrapper hidden">
+    <a href="history-bookmarks.html?tab=bookmarks" id="switcherLink" class="switcher-btn">
+      <div class="switcher-card" id="switcherCard">
+        <div class="switcher-face front">
+          <span class="icon">🔖</span>
+          <span>Bookmark</span>
+        </div>
+        <div class="switcher-face back">
+          <span class="icon">📖</span>
+          <span>Riwayat Baca</span>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Tombol Admin -->
+  <a href="admin-dashboard.html" id="adminLink" class="btn-outline hidden" style="border-color: var(--primary); color: var(--primary); font-weight: 600;">
+    ⚙️ Admin Panel
+  </a>
+
+  <span id="userStatus">Memuat...</span>
+  <button id="logoutBtn" class="btn-outline hidden" style="color: #dc2626;">Keluar</button>
+</div>
+  </header>
+
+  <!-- Konten Utama -->
+  <main class="container">
+    <section class="hero">
+      <h1>Katalog Mata Kuliah</h1>
+      <p>Pilih mata kuliah dan tahun ajaran untuk membaca materi secara online.</p>
+    </section>
+
+    <!-- Bar Pencarian & Sorting Semester -->
+    <section class="controls">
+      <input type="text" id="searchInput" placeholder="Cari nama atau kode mata kuliah...">
+      
+      <select id="semesterFilter">
+        <option value="all">Semua Semester (Urutkan 1 - 8)</option>
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+        <option value="3">Semester 3</option>
+        <option value="4">Semester 4</option>
+        <option value="5">Semester 5</option>
+        <option value="6">Semester 6</option>
+        <option value="7">Semester 7</option>
+        <option value="8">Semester 8</option>
+      </select>
+    </section>
+
+    <!-- Grid Mother Button (Daftar Mata Kuliah) -->
+    <section id="courseGrid" class="course-grid">
+      <!-- Dirender otomatis oleh JavaScript -->
+    </section>
+  </main>
+
+  <!-- Pop-up Modal Tahun Ajaran -->
+  <div id="yearModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalCourseTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalCourseTitle">Pilih Tahun Ajaran</h3>
+        <button id="closeModal" class="btn-close" aria-label="Tutup modal">&times;</button>
+      </div>
+      <p class="modal-subtitle">Pilih tahun ajaran untuk membuka materi mata kuliah ini:</p>
+      
+      <div id="yearList" class="year-list" role="listbox">
+        <!-- Tombol Tahun Ajaran dirender di sini -->
+      </div>
+    </div>
+  </div>
+
+
+  <script src="../JS/app.js"></script>
+</body>
+</html>

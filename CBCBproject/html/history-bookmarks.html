@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aktivitas Saya - Repositori Materi Kuliah</title>
+  <link rel="stylesheet" href="../CSS/style.css">
+  <link rel="stylesheet" href="../CSS/history-bookmarks.css">
+  <!-- Supabase JS via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../JS/utils.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="logo">📚 RepoKampus</div>
+    <div class="nav-actions">
+      <button id="themeToggle" class="btn-outline">🌙 Mode Gelap</button>
+      <a href="index.html" class="btn-outline">Kembali ke Katalog</a>
+      <button id="logoutBtn" class="btn-outline" style="color: #dc2626;">Keluar</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="page-header">
+      <h1>Aktivitas Pembelajaran</h1>
+      <p>Pantau riwayat materi yang pernah Anda baca dan kelola daftar materi favorit.</p>
+    </section>
+
+    <!-- Tab Navigasi Aktivitas -->
+<!-- Tab Navigasi Segmented Pill -->
+<div class="segmented-control">
+  <button id="tabBookmarks" class="segmented-btn active">
+    <span class="btn-icon">🔖</span>
+    <span>Bookmark Materi</span>
+  </button>
+  <button id="tabHistory" class="segmented-btn">
+    <span class="btn-icon">📖</span>
+    <span>Riwayat Baca</span>
+  </button>
+</div>
+
+    <!-- Alert Notifikasi -->
+    <div id="statusAlert" class="alert-box"></div>
+
+    <!-- Bagian 1: Riwayat Bacaan -->
+    <section id="sectionHistory" class="activity-section">
+      <div id="historyList" class="items-list">
+        <p class="text-muted">Mengambil riwayat bacaan...</p>
+      </div>
+    </section>
+
+    <!-- Bagian 2: Materi Favorit (Default Tersembunyi) -->
+    <section id="sectionBookmarks" class="activity-section hidden">
+      <div id="bookmarksList" class="items-list">
+        <p class="text-muted">Mengambil materi favorit...</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="../JS/history-bookmarks.js"></script>
+</body>
+</html>

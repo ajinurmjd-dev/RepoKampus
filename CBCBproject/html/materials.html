@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Materi Kuliah</title>
+  <link rel="stylesheet" href="../CSS/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../JS/utils.js"></script>
+  <style>
+    .materials-header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+    .material-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .material-info h3 {
+      font-size: 1.15rem;
+      margin-bottom: 0.35rem;
+    }
+    .material-info p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .material-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .btn-read {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .btn-read:hover {
+      background: var(--primary-hover);
+    }
+    .btn-bookmark {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.55rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">📚 RepoKampus</div>
+    <div class="nav-actions">
+      <a href="index.html" class="btn-outline">Kembali ke Katalog</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="materials-header">
+      <h1 id="courseTitle">Memuat Mata Kuliah...</h1>
+      <p id="courseMeta">Tahun Ajaran: -</p>
+    </div>
+
+    <section id="materialsList">
+      <p>Mengambil daftar materi...</p>
+    </section>
+  </main>
+
+  <script>
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get("course_id");
+    const academicYear = urlParams.get("year");
+
+    let currentUser = null;
+    let bookmarkedIds = new Set();
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // 1. Validasi Proteksi: Guest wajib login
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session || !session.user) {
+        alert("Akses materi dibatasi. Silakan login terlebih dahulu.");
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = session.user;
+
+      if (!courseId || !academicYear) {
+        alert("Parameter mata kuliah atau tahun ajaran tidak valid.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      await loadCourseDetails();
+      await loadUserBookmarks();
+      await fetchMaterials();
+    });
+
+    async function loadCourseDetails() {
+      const { data: course } = await supabaseClient
+        .from("courses")
+        .select("name, code, semester")
+        .eq("id", courseId)
+        .single();
+
+      if (course) {
+        document.getElementById("courseTitle").innerText = `${course.code} - ${course.name}`;
+        document.getElementById("courseMeta").innerText = `Semester ${course.semester} | Tahun Ajaran ${academicYear}`;
+      }
+    }
+
+    async function loadUserBookmarks() {
+      const { data } = await supabaseClient
+        .from("bookmarks")
+        .select("material_id")
+        .eq("user_id", currentUser.id);
+
+      if (data) {
+        bookmarkedIds = new Set(data.map(b => b.material_id));
+      }
+    }
+
+    async function fetchMaterials() {
+      const listContainer = document.getElementById("materialsList");
+
+      const { data: materials, error } = await supabaseClient
+        .from("materials")
+        .select("*")
+        .eq("course_id", courseId)
+        .eq("academic_year", academicYear)
+        .order("created_at", { ascending: true });
+
+      if (error || !materials || materials.length === 0) {
+        listContainer.innerHTML = "<p>Belum ada materi perkuliahan yang diunggah untuk tahun ajaran ini.</p>";
+        return;
+      }
+
+      listContainer.innerHTML = materials.map(mat => {
+        const isFav = bookmarkedIds.has(mat.id);
+        return `
+          <div class="material-card">
+            <div class="material-info">
+              <h3>${mat.title}</h3>
+              <p>${mat.description || "Tidak ada deskripsi berkas."}</p>
+            </div>
+            <div class="material-actions">
+              <button class="btn-bookmark" onclick="toggleBookmark('${mat.id}', this)">
+                ${isFav ? "★ Tersimpan" : "☆ Favorit"}
+              </button>
+              <a href="reader.html?id=${mat.id}" class="btn-read">Baca Online</a>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+async function toggleBookmark(materialId, buttonElement) {
+  if (!currentUser) {
+    alert("Silakan login terlebih dahulu untuk menyimpan bookmark.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const isCurrentlyBookmarked = bookmarkedIds.has(materialId);
+
+  // 1. Tampilan langsung diubah saat tombol ditekan (responsif instan)
+  if (isCurrentlyBookmarked) {
+    bookmarkedIds.delete(materialId);
+    buttonElement.innerText = "☆ Bookmark";
+    buttonElement.style.color = "var(--text-main)";
+  } else {
+    bookmarkedIds.add(materialId);
+    buttonElement.innerText = "★ Tersimpan";
+    buttonElement.style.color = "var(--primary)";
+  }
+
+  // 2. Kirim update ke database Supabase
+  try {
+    if (isCurrentlyBookmarked) {
+      const { error } = await supabaseClient
+        .from("bookmarks")
+        .delete()
+        .eq("user_id", currentUser.id)
+        .eq("material_id", materialId);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from("bookmarks")
+        .insert({
+          user_id: currentUser.id,
+          material_id: materialId
+        });
+
+      if (error) throw error;
+    }
+  } catch (err) {
+    console.error("Gagal update bookmark:", err.message);
+    // Kembalikan tampilan ke kondisi semula jika terjadi error
+    if (isCurrentlyBookmarked) {
+      bookmarkedIds.add(materialId);
+      buttonElement.innerText = "★ Tersimpan";
+    } else {
+      bookmarkedIds.delete(materialId);
+      buttonElement.innerText = "☆ Bookmark";
+    }
+    alert("Gagal memperbarui bookmark: " + err.message);
+  }
+}
+  </script>
+</body>
+</html>

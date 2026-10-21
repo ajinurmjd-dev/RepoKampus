@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Masuk - Repositori Materi Kuliah</title>
+  <!-- CSS Global & CSS Khusus Auth -->
+  <link rel="stylesheet" href="../CSS/style.css">
+  <link rel="stylesheet" href="../CSS/auth.css">
+  <!-- Supabase JS via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Utils Module -->
+  <script src="../JS/utils.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="logo">📚 RepoKampus</div>
+    <div class="nav-actions">
+      <button id="themeToggle" class="btn-outline">🌙 Mode Gelap</button>
+      <a href="index.html" class="btn-outline">Kembali ke Katalog</a>
+    </div>
+  </header>
+
+  <!-- Area Form Autentikasi -->
+  <main class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button id="tabLogin" class="tab-btn active">Masuk</button>
+        <button id="tabRegister" class="tab-btn">Daftar Akun</button>
+      </div>
+
+      <div id="alertBox" class="alert-box"></div>
+
+      <!-- Form 1: Login -->
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email Kampus</label>
+          <input type="email" id="loginEmail" placeholder="nama@student.unsika.ac.id" required>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Kata Sandi</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" id="btnLoginSubmit" class="btn-submit">Masuk ke Sistem</button>
+      </form>
+
+      <!-- Form 2: Register (Default Tersembunyi) -->
+      <form id="registerForm" class="hidden">
+        <div class="form-group">
+          <label for="regFullName">Nama Lengkap</label>
+          <input type="text" id="regFullName" placeholder="Nama Mahasiswa / Dosen" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regNpm">NPM / NIP</label>
+          <input type="text" id="regNpm" placeholder="Contoh: 2110631170001" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail">Email Resmi Kampus</label>
+          <input type="email" id="regEmail" placeholder="nama@student.unsika.ac.id" required>
+          <div class="form-hint">Harus berakhiran @unsika.ac.id atau @student.unsika.ac.id</div>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword">Kata Sandi</label>
+          <input type="password" id="regPassword" placeholder="Minimal 6 karakter" minlength="6" required>
+        </div>
+
+        <button type="submit" id="btnRegisterSubmit" class="btn-submit">Buat Akun Baru</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="../JS/auth.js"></script>
+</body>
+</html>

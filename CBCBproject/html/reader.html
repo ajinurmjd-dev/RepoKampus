@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Document Reader</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Library PDF.js untuk render Canvas tanpa tombol download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="../JS/utils.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none; /* Mencegah drag/highlight teks */
+    }
+    body {
+      background-color: #1e293b;
+      color: #f8fafc;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Toolbar Pembaca */
+    .reader-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      background-color: #0f172a;
+      border-bottom: 1px solid #334155;
+      z-index: 10;
+    }
+    .doc-title {
+      font-size: 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 400px;
+    }
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .btn-ctrl {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .btn-ctrl:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .page-indicator {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    /* Area Penampil PDF */
+    .viewport-container {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem 1rem;
+      background-color: #1e293b;
+    }
+    canvas {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      background-color: #ffffff;
+      max-width: 100%;
+      height: auto;
+    }
+    .btn-exit {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;"> <!-- Blokir klik kanan simpan gambar/pdf -->
+
+  <header class="reader-toolbar">
+    <div class="doc-title" id="docTitle">Memuat Dokumen...</div>
+
+    <div class="nav-controls">
+      <button id="prevBtn" class="btn-ctrl" disabled>&larr; Sebelumnya</button>
+      <span class="page-indicator">Halaman <span id="pageNum">1</span> / <span id="pageCount">-</span></span>
+      <button id="nextBtn" class="btn-ctrl" disabled>Berikutnya &rarr;</button>
+    </div>
+
+    <div>
+      <button onclick="window.history.back()" class="btn-exit">Tutup Materi</button>
+    </div>
+  </header>
+
+  <main class="viewport-container">
+    <canvas id="pdfCanvas"></canvas>
+  </main>
+
+  <script>
+    // Konfigurasi Worker PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const materialId = new URLSearchParams(window.location.search).get("id");
+
+    let pdfDoc = null;
+    let pageNum = 1;
+    let pageRendering = false;
+    let pageNumPending = null;
+    const canvas = document.getElementById("pdfCanvas");
+    const ctx = canvas.getContext("2d");
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // 1. Cek Sesi Autentikasi
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session || !session.user) {
+        alert("Akses diblokir: Wajib login untuk membaca materi!");
+        window.location.href = "login.html";
+        return;
+      }
+
+      if (!materialId) {
+        alert("ID Dokumen tidak ditemukan.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      // 2. Ambil Informasi Berkas Materi dari Database
+      const { data: material, error } = await supabaseClient
+        .from("materials")
+        .select("title, file_path")
+        .eq("id", materialId)
+        .single();
+
+      if (error || !material) {
+        alert("Materi tidak ditemukan atau telah dihapus.");
+        window.history.back();
+        return;
+      }
+
+      document.getElementById("docTitle").innerText = material.title;
+
+      // 3. Catat Riwayat Baca (Log Otomatis)
+      await recordReadingLog(session.user.id, materialId);
+
+      // 4. Generate URL Akses Sementara dari Supabase Storage (Private Bucket)
+      const { data: storageData, error: storageError } = await supabaseClient
+        .storage
+        .from("course-materials")
+        .createSignedUrl(material.file_path, 3600); // URL berlaku 1 jam saja
+
+      if (storageError || !storageData.signedUrl) {
+        alert("Gagal mengakses file materi di storage.");
+        return;
+      }
+
+      // 5. Inisialisasi Rendering Dokumen PDF
+      initPdf(storageData.signedUrl);
+    });
+
+    // Fungsi Pencatatan Riwayat Akses
+async function recordReadingLog(userId, matId) {
+  try {
+    // 1. Catat log riwayat baca mahasiswa
+    await supabaseClient
+      .from("reading_histories")
+      .insert({
+        user_id: userId,
+        material_id: matId
+      });
+
+    // 2. Tambah view count lewat RPC (Bypass RLS dengan aman)
+    await supabaseClient.rpc("increment_material_views", {
+      target_material_id: matId
+    });
+  } catch (err) {
+    console.error("Gagal mencatat log riwayat baca / views:", err);
+  }
+}
+    // PDF.js Engine: Load & Render
+    function initPdf(url) {
+      pdfjsLib.getDocument(url).promise.then((doc) => {
+        pdfDoc = doc;
+        document.getElementById("pageCount").innerText = doc.numPages;
+        renderPage(pageNum);
+      }).catch(err => {
+        alert("Format berkas rusak atau gagal dimuat.");
+        console.error(err);
+      });
+    }
+
+    function renderPage(num) {
+      pageRendering = true;
+      pdfDoc.getPage(num).then((page) => {
+        const viewport = page.getViewport({ scale: 1.5 });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        const renderTask = page.render(renderContext);
+
+        renderTask.promise.then(() => {
+          pageRendering = false;
+          if (pageNumPending !== null) {
+            renderPage(pageNumPending);
+            pageNumPending = null;
+          }
+        });
+      });
+
+      document.getElementById("pageNum").innerText = num;
+      document.getElementById("prevBtn").disabled = (num <= 1);
+      document.getElementById("nextBtn").disabled = (num >= pdfDoc.numPages);
+    }
+
+    function queueRenderPage(num) {
+      if (pageRendering) {
+        pageNumPending = num;
+      } else {
+        renderPage(num);
+      }
+    }
+
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      if (pageNum <= 1) return;
+      pageNum--;
+      queueRenderPage(pageNum);
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      if (pageNum >= pdfDoc.numPages) return;
+      pageNum++;
+      queueRenderPage(pageNum);
+    });
+  </script>
+</body>
+</html>
