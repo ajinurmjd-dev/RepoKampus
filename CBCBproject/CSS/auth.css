@@ -1,19 +1,84 @@
 .auth-wrapper {
-  min-height: calc(100vh - 120px);
+  min-height: calc(100vh - 72px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 2.5rem 1.5rem;
+  position: relative;
+  /* Background: Arsitektur Perpustakaan Megah + Blueprint Grid Struktur Repo */
+  background: 
+    linear-gradient(rgba(5, 150, 105, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(5, 150, 105, 0.05) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(6, 78, 59, 0.82) 0%, rgba(15, 23, 42, 0.88) 100%),
+    url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat fixed;
+  background-size: 32px 32px, 32px 32px, cover, cover;
+}
+
+[data-theme="dark"] .auth-wrapper {
+  background: 
+    linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(6, 13, 10, 0.92) 0%, rgba(11, 28, 22, 0.95) 100%),
+    url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat fixed;
+  background-size: 32px 32px, 32px 32px, cover, cover;
 }
 
 .auth-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
   width: 100%;
   max-width: 440px;
-  padding: 2rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 2.25rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 2;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .auth-card {
+  background: rgba(17, 28, 22, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(31, 51, 40, 0.85);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(16, 185, 129, 0.15);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background: var(--border-color, #d1fae5);
+  border-radius: 14px;
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+[data-theme="dark"] .auth-icon-badge {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.auth-header h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
+}
+
+.auth-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .auth-tabs {
